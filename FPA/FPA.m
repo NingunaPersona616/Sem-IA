@@ -1,0 +1,100 @@
+clear all
+close all
+clc
+
+% Drop-Wave
+% f = @(x,y) -((1+cos(12*sqrt(x.^2+y.^2)))./(0.5*(x.^2+y.^2)+2));
+
+% Rastrigin
+% f = @(x,y) 10*2 + x.^2 + y.^2 - 10*cos(2*pi*x) - 10*cos(2*pi*y);
+
+%McCormick
+% f = @(x,y) sin(x+y)+(x-y).^2-1.5*x+2.5*y+1;
+% xl = [-1.5 -3]';
+% xu = [4 4]';
+
+f = @(x,y) (x-2).^2 + (y-2).^2;
+
+%Ackley
+% f = @(x,y) -20*exp(-0.2*sqrt(0.5*(x.^2 + y.^2))) - exp(0.5*(cos(2*pi*x)+cos(2*pi*y))) + 20+exp(1); 
+
+xl = [-5 -5]';
+xu = [5 5]';
+
+D = 2;
+G = 150;
+N = 50;
+
+x = zeros(D, N);
+fitness = zeros(1,N);
+
+f_plot = zeros(1, G);
+
+for i=1:N
+    x(:, i) = xl+(xu-xl).*rand(D, 1);
+    fitness(i) = f(x(1, i), x(2, i));
+end  
+
+p = 0.8;
+lambda = 1.5;
+sigma2 = (((gamma(1+lambda))/(lambda*gamma((1+lambda)/2))) * ((sin((pi*lambda)/2))/(2^((lambda-1)/2))))^(1/lambda); %Sigma pal vuelo de levy
+
+
+for g=1:G
+    Plot_Contour(f, x, xl, xu)
+
+    [~, igb] = min(fitness);    %Saca la mejor sol global
+
+    for i=1:N
+        %Polinizacion global
+        if rand() < p
+            u = normrnd(0, sigma2, [D, 1]) ; %Genera un vector v (con D reng y 1 col) usando una dist normal
+            v = normrnd(0, 1, [D,1]);   %genera un vector igual al enterior pero con desv estdr=1 
+            L = u./(abs(v).^(1/lambda));    %Paso de polinizacion con el vuelo de Levy
+            
+            y = x(:, i ) + L.*(x(:, igb) - x(:,i)); %Calcula una sol candidata con un error del global y el actual multiplicadas por el paso de polinizacion
+
+        else  %Polinizacion local      
+            j=i;
+            while j==i
+                j = randi([1, N]);
+            end
+            
+            k=j;
+            while k==i && k==j
+                k = randi([1, N]);
+            end
+
+            y = x(:, i) + rand()*(x(:, j) - x(:, k));
+        end
+
+        fy = f(y(1), y(2));
+
+        if fy < fitness(i)
+            x(:, i) = y;
+            fitness(i) = fy;
+        end
+    end
+
+    f_plot(g) = min(fitness);
+end
+
+[~, I_best] = min(fitness);
+
+
+figure
+title('Gráfica en 2D','FontSize',15)
+Plot_Contour(f, x(:, I_best), xl, xu)
+
+figure
+title('Gráfica en 3D','FontSize',15)
+Plot_Surf(f, x(:, I_best), xl, xu)
+
+%Grafica de convergencia
+figure
+plot(f_plot, 'b-', 'LineWidth', 2)
+xlabel('iteracion','FontSize',15)
+ylabel('fx','FontSize',15)
+title('Gráfica de convergencia','FontSize',15)
+
+display(['Minimo global en x=' num2str(x(1,I_best)) ', y=' num2str(x(2, I_best)) ', f(x,y)=' num2str(fitness(I_best))]);
