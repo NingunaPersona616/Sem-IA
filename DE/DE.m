@@ -8,13 +8,20 @@ clc
 % Rastrigin
 % f = @(x,y) 10*2 + x.^2 + y.^2 - 10*cos(2*pi*x) - 10*cos(2*pi*y);
 
+%McCormick
+f = @(x,y) sin(x+y)+(x-y).^2-1.5*x+2.5*y+1;
+fp = @(x, xl, xu) f(x(1), x(2)) + 1000*Penalty(x, xl, xu);
+
+xl = [-1.5 -3]';
+xu = [4 4]';
+
 %Ackley
-f = @(x,y) -20*exp(-0.2*sqrt(0.5*(x.^2 + y.^2))) - exp(0.5*(cos(2*pi*x)+cos(2*pi*y))) + 20+exp(1); 
+% f = @(x,y) -20*exp(-0.2*sqrt(0.5*(x.^2 + y.^2))) - exp(0.5*(cos(2*pi*x)+cos(2*pi*y))) + 20+exp(1); 
 
 % f = @(x,y) (x-2).^2 + (y-2).^2;
 
-xl = [-5 -5]';
-xu = [5 5]';
+% xl = [-5 -5]';
+% xu = [5 5]';
 
 D = 2;
 G = 150;
@@ -28,7 +35,7 @@ f_plot = zeros(1, G);
 
 for i=1:N
     x(:, i) = xl+(xu-xl).*rand(D, 1);
-    fitness(i) = f(x(1, i), x(2, i));
+    fitness(i) = f(x(1,i), x(2,i));
 end  
 
 for n=1:G
@@ -63,14 +70,25 @@ for n=1:G
         end
         
         %Seleccion
-        fu = f(u(1), u(2));
+
+        %Esquema de recalculo de penalizacion PD:Ocupa usar la funcion original
+%         for j=1:D
+%             if xl(j) < u(j) && x(j) < xu(j)
+%                 %La solucion es la misma
+%             else
+%                 u(j) = xl(j) + (xu(j) - xl(j))*rand();  %Recalculas el eje que se sale del espacio de busqueda
+%             end
+%         end
+        
+        fu = fp(u(:), xl, xu);  %Funcion de penalizacion
+%         fu = f(u(1), u(2));  %Original
 
         if fu < fitness(i)
             x(:, i) = u;
             fitness(i) = fu;
         end
     end
-%     Plot_Contour(f, x, xl, xu);
+    Plot_Contour(f, x, xl, xu);
     [fx_best, I_best] = min(fitness);
     f_plot(n) = fx_best;
 end    
@@ -94,5 +112,36 @@ title('Gráfica de convergencia','FontSize',15)
 
 display(['Minimo global en x=' num2str(x(1,I_best)) ', y=' num2str(x(2, I_best)) ', f(x,y)=' num2str(fx_best)]);
 
+%Metodo 1 de penalizacion
+% function z = Penalty(x, xl, xu)
+%     z = 0;
+%     D = numel(xl);
+% 
+%     for j=1:D
+%         if xl(j) < x(j) && x(j) < xu(j)
+%             z = z + 0;
+%         else
+%             z = z + 1;
+%         end
+%     end
+% end
 
+%Metodo 2 de penalizacion
+function z = Penalty(x, xl, xu)
+    z = 0;
+    D = numel(xl);
 
+    for j=1:D
+        if xl(j) < x(j)
+            z = z + 0;
+        else
+            z = z + (xl(j) - x(j))^2;
+        end
+
+        if x(j) < xu(j)
+            z = z + 0;
+        else
+            z = z + (xu(j) - x(j))^2;
+        end
+    end
+end
