@@ -9,19 +9,29 @@ clc
 % f = @(x,y) 10*2 + x.^2 + y.^2 - 10*cos(2*pi*x) - 10*cos(2*pi*y);
 
 %McCormick
-f = @(x,y) sin(x+y)+(x-y).^2-1.5*x+2.5*y+1;
-fp = @(x, xl, xu) f(x(1), x(2)) + 1000*Penalty(x, xl, xu);
-
-xl = [-1.5 -3]';
-xu = [4 4]';
+% f = @(x,y) sin(x+y)+(x-y).^2-1.5*x+2.5*y+1;
+% xl = [-1.5 -3]';
+% xu = [4 4]';
 
 %Ackley
 % f = @(x,y) -20*exp(-0.2*sqrt(0.5*(x.^2 + y.^2))) - exp(0.5*(cos(2*pi*x)+cos(2*pi*y))) + 20+exp(1); 
 
 % f = @(x,y) (x-2).^2 + (y-2).^2;
 
-% xl = [-5 -5]';
-% xu = [5 5]';
+%Funcion de penalizacion
+fp = @(x, xl, xu) f(x(1), x(2)) + 1000*Penalty(x, xl, xu);
+
+%Funcion Objetivo para sistemas de ecuaciones lineales(enfoque cuadratico)
+A = [2 3; 5 1];
+b = [7; 11];
+
+m = numel(b);
+
+f = @(x) (1/(2*m))*sum((b-A*x).^2);
+
+% limites inferior y superior, modificar cada que se necesiten mas o menos variables
+xl = [-5 -5]';
+xu = [5 5]';
 
 D = 2;
 G = 150;
@@ -35,7 +45,8 @@ f_plot = zeros(1, G);
 
 for i=1:N
     x(:, i) = xl+(xu-xl).*rand(D, 1);
-    fitness(i) = f(x(1,i), x(2,i));
+%     fitness(i) = f(x(1,i), x(2,i)); %Original
+    fitness(i) = f(x(:, i));  %Sistema de ecuaciones lineales
 end  
 
 for n=1:G
@@ -65,7 +76,7 @@ for n=1:G
             if rand() <= CR %Si tiene probabilidad recombinarse con el vector mutado
                 u(j) = v(j);
             else
-                u(j) = x(j, i);
+                u(j) = x(j, i); %sino se queda igual que la sol actual
             end
         end
         
@@ -80,28 +91,29 @@ for n=1:G
 %             end
 %         end
         
-        fu = fp(u(:), xl, xu);  %Funcion de penalizacion
-%         fu = f(u(1), u(2));  %Original
+%         fu = fp(u(:), xl, xu);  %Funcion de penalizacion
+%         fu = f(u(1), u(2));  %Original    
+        fu = f(u);  %Sistema de ecuaciones lineales
 
         if fu < fitness(i)
             x(:, i) = u;
             fitness(i) = fu;
         end
     end
-    Plot_Contour(f, x, xl, xu);
+%     Plot_Contour(f, x, xl, xu);
     [fx_best, I_best] = min(fitness);
     f_plot(n) = fx_best;
 end    
 
 
 
-figure
-title('Gráfica en 2D','FontSize',15)
-Plot_Contour(f, x(:, I_best), xl, xu)
+% figure
+% title('Gráfica en 2D','FontSize',15)
+% Plot_Contour(f, x(:, I_best), xl, xu)
 
-figure
-title('Gráfica en 3D','FontSize',15)
-Plot_Surf(f, x(:, I_best), xl, xu)
+% figure
+% title('Gráfica en 3D','FontSize',15)
+% Plot_Surf(f, x(:, I_best), xl, xu)
 
 %Grafica de convergencia
 figure
