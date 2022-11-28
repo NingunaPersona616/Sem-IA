@@ -3,12 +3,14 @@ close all
 clc
 
 %%%
-img_ref = imread("ref_1.png");
+img_ref = imread("display_ref.jpg");
 [~, ~, P] = readBarcode(img_ref, "QR-CODE");
 
 img_des = imread("letsgous.jpg");
 [n, m, ~] = size(img_des);
 %%%
+
+P
 
 %Puntos de referencia del QR
 X1 = P(1, :)';
@@ -21,10 +23,10 @@ x2 = [1, 1]';   %Esquina izq superior
 x3 = [m, 1]';   %Esquina derecha superior
 
 % Parametros para optimizar
-dx = 169;
-dy = 140;
-theta = -pi/4;
-s = 0.175;
+dx = 0;
+dy = 0;
+theta =0;
+s = 1;
 
 q = [dx dy theta s]';
 
