@@ -5,7 +5,7 @@ clc
 fp = @(x, xl, xu) f(x(1), x(2)) + 1000*Penalty(x, xl, xu);
 
 %%%
-img_ref = imread("display_ref.jpg");
+img_ref = imread("Imagen1.png");
 [~, ~, P] = readBarcode(img_ref, "QR-CODE");
 [Nu, Mu, ~] = size(img_ref);    %N upper y M upper
 
@@ -44,7 +44,7 @@ f_plot = zeros(1, G);
 
 for i=1:N
     x(:, i) = xl+(xu-xl).*rand(D, 1);
-    q = x;
+    q = x(:,i);
 
     xp1 = Transformacion_Similitud(q,x1);
     xp2 = Transformacion_Similitud(q,x2);
@@ -100,7 +100,7 @@ for n=1:G
         e2 = Distancia_Euclidiana(X2,xp2);
         e3 = Distancia_Euclidiana(X3,xp3);
         
-        fu = (1/6)*(e1^2+e2^2+e3^2) + 1000*(Penalty(q, xl, xu)); %Funcion de penalizacion
+        fu = (1/6)*(e1^2+e2^2+e3^2) + 10000*(Penalty(u, xl, xu)); %Funcion de penalizacion
 
         if fu < fitness(i)
             x(:, i) = u;
@@ -120,38 +120,38 @@ display(['Escala: ', num2str(x(4, I_best))]);
 Imprimir_Imagenes(x(:,I_best),img_des,img_ref)
 
 %Metodo 1 de penalizacion
-function z = Penalty(x, xl, xu)
-    z = 0;
-    D = numel(xl);
-
-    for j=1:D
-        if xl(j) < x(j) && x(j) < xu(j)
-            z = z + 0;
-        else
-            z = z + 1;
-        end
-    end
-end
-
-%Metodo 2 de penalizacion
 % function z = Penalty(x, xl, xu)
 %     z = 0;
 %     D = numel(xl);
 % 
 %     for j=1:D
-%         if xl(j) < x(j)
+%         if xl(j) < x(j) && x(j) < xu(j)
 %             z = z + 0;
 %         else
-%             z = z + (xl(j) - x(j))^2;
-%         end
-% 
-%         if x(j) < xu(j)
-%             z = z + 0;
-%         else
-%             z = z + (xu(j) - x(j))^2;
+%             z = z + 1;
 %         end
 %     end
 % end
+
+%Metodo 2 de penalizacion
+function z = Penalty(x, xl, xu)
+    z = 0;
+    D = numel(xl);
+
+    for j=1:D
+        if xl(j) < x(j)
+            z = z + 0;
+        else
+            z = z + (xl(j) - x(j))^2;
+        end
+
+        if x(j) < xu(j)
+            z = z + 0;
+        else
+            z = z + (xu(j) - x(j))^2;
+        end
+    end
+end
 
 %Funciones
 function xp = Transformacion_Similitud (qi,xi)
